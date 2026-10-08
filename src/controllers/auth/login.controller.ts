@@ -63,10 +63,10 @@ export async function login(req:Request<null,null,LoginUserBody>,res:Response<Ap
         
         const isPasswordMatch = user.passwordHash && verifyHash(user.passwordHash,password)
 
-        if(isPasswordMatch)
+        if(!isPasswordMatch)
         {
             return res.status(401).json({
-                success : true,
+                success : false,
                 message : 'Invalid email or password'
             })
         }

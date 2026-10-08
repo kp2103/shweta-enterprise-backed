@@ -12,4 +12,6 @@ export const userTable = pgTable('users', {
     .notNull()
     .references(() => rolesTable.roleId),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt : timestamp('updated_at').defaultNow().$onUpdate(()=> new Date()).notNull(),
+  passwordChangedAt : timestamp('password_changed_at')
 });
