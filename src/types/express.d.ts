@@ -4,6 +4,8 @@ declare global {
       user?: {
         id: string;
         sessionId: string;
+        accessTokenExpireAt : number,
+        accessTokenId : string
       };
     }
   }

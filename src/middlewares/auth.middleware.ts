@@ -4,6 +4,8 @@ import { verifyAccessToken } from '../utils/token.utils.js';
 import { logError } from '../utils/logs.util.js';
 import { fetchUserById } from '../services/user/fetchUserById.js';
 import { removeSession } from '../services/sessions/removeSession.js';
+import { redisClient } from '../config/redis.js';
+import { REDIS_BLACKLIST_TOKEN_KEY } from '../constants/redis.const.js';
 
 export async function authMiddleware(
   req: Request,
@@ -24,11 +26,23 @@ export async function authMiddleware(
 
   try {
     const decoded = verifyAccessToken(accessToken);
-    if (!decoded || !decoded.iat) {
+    if (!decoded || !decoded.iat || !decoded.exp || !decoded.jti) {
       return res.status(401).json({
         success: false,
         message: 'Invalid or expired token',
       });
+    }
+
+    //check token is balcklisted or not
+    const isBlackListed = await redisClient.exists(`${REDIS_BLACKLIST_TOKEN_KEY}:${decoded.jti}`)
+
+    if(isBlackListed)
+    {
+      return res.status(403).json({
+        success : false,
+        message : "Unauthorized token is blacklisted",
+        data : null
+      })
     }
 
     const user = await fetchUserById(decoded.userId);
@@ -62,6 +76,8 @@ export async function authMiddleware(
     req.user = {
       id: decoded.userId,
       sessionId: decoded.sessionId,
+      accessTokenExpireAt : decoded.exp,
+      accessTokenId : decoded.jti
     };
 
     next();

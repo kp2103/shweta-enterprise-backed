@@ -35,10 +35,10 @@ export async function refreshTokens(req:Request<null,null,RefreshTokensBody>,res
             )
         ))[0]
         
-        // if not logout
+        // if no session so logout
         if(!session)
         {
-            throw new Error("Fail to create an session")
+            throw new Error("Fail to get an session")
         }
 
         // if yes then create and new accessToken based on that session 
