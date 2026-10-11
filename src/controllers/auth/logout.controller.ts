@@ -4,12 +4,11 @@ import { logError } from "../../utils/logs.util.js";
 import { removeSession } from "../../services/sessions/removeSession.js";
 import { getTokenRemainingLife } from "../../utils/token.utils.js";
 import { redisClient } from "../../config/redis.js";
+import { REDIS_BLACKLIST_TOKEN_KEY } from "../../constants/redis.const.js";
 
 interface LogoutRequestBody {
     refreshToken: string;
 }
-
-const REDIS_BLACKLIST_TOKEN_KEY = `shweta-enterprise:bl:tokens`;
 
 export async function logout(req: Request<unknown, null, LogoutRequestBody>, res: Response<ApiResponse>) {
     try {

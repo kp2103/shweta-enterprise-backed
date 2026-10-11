@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ALTER COLUMN "expires_at" SET DEFAULT '2026-10-18 05:45:48.109';

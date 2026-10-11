@@ -26,6 +26,7 @@ export async function authMiddleware(
 
   try {
     const decoded = verifyAccessToken(accessToken);
+    console.log(decoded)
     if (!decoded || !decoded.iat || !decoded.exp || !decoded.jti) {
       return res.status(401).json({
         success: false,
