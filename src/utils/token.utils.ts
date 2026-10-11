@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
+import { randomUUID } from 'crypto';
 
 export interface AccessTokenPayload extends jwt.JwtPayload {
   userId: string;
@@ -13,6 +14,7 @@ export interface RefreshTokenPayload extends jwt.JwtPayload {
 export function generateAccessToken(payload: AccessTokenPayload) {
   const accessToken = jwt.sign(payload, env.JWT_SECRET, {
     expiresIn: '15m',
+    jwtid : randomUUID()
   });
   return accessToken;
 }
@@ -20,6 +22,7 @@ export function generateAccessToken(payload: AccessTokenPayload) {
 export function generateRefreshToken(payload: RefreshTokenPayload) {
   const refreshToken = jwt.sign(payload, env.JWT_SECRET, {
     expiresIn: '7d',
+    jwtid : randomUUID()
   });
 
   return refreshToken;
