@@ -1,17 +1,28 @@
-// controllers/retailer.controller.ts
 import type { Request, Response } from 'express';
 import { logError } from '../../utils/logs.util.js';
 import { generateRandomPassword } from '../../utils/password.utils.js';
 import { createUser } from '../../services/user/createUser.js';
 import { createRetailer } from '../../services/retailer/createRetailer.service.js';
 import { deleteFromCloudinary } from '../../utils/cloudinary.util.js';
+import { sendValidatedResponse } from '../../utils/response.util.js';
+import { createRetailerResponseSchema } from '../../api-schemas/retailer.schemas.js';
 
 export async function registerRetailer(req: Request, res: Response) {
-  // We know req.body is valid because the Busboy middleware already validated it.
-  const { email, fullName, address, area, city, gstNo, latitude, longitude, phone, postalCode, shopName } = req.body;
+  const {
+    email,
+    fullName,
+    address,
+    area,
+    city,
+    gstNo,
+    latitude,
+    longitude,
+    phone,
+    postalCode,
+    shopName,
+  } = req.body;
 
-  // Grab the data attached by our stream-upload middleware!
-  const cloudinaryData = req.cloudinaryData!; 
+  const cloudinaryData = req.cloudinaryData!;
 
   try {
     // 1. Create User
@@ -34,21 +45,21 @@ export async function registerRetailer(req: Request, res: Response) {
       postalCode,
       shopName,
       gstNo,
-      latitude, 
-      longitude, 
-      shopPhotoUrl: cloudinaryData.url // Use the URL from Cloudinary directly!
+      latitude,
+      longitude,
+      shopPhotoUrl: cloudinaryData.url,
     });
 
-    return res.status(201).json({ 
-      success: true, 
-      message: 'Retailer registered successfully', 
-      data: retailer 
+    // Validate response schema before sending
+    return sendValidatedResponse(res, 201, createRetailerResponseSchema, {
+      success: true,
+      message: 'Retailer registered successfully',
+      data: retailer,
     });
-
   } catch (error) {
     logError('create retailer controller', error);
-    
-    // 3. Rollback Cloudinary if DB insertion fails
+
+    // Rollback Cloudinary if DB insertion fails
     if (cloudinaryData?.publicId) {
       await deleteFromCloudinary(cloudinaryData.publicId);
     }

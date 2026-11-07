@@ -8,3 +8,5 @@ export const rolesTable = pgTable('roles', {
   roleId: uuid('id').defaultRandom().primaryKey(),
   role: roleTypeEnum('role').notNull().unique(),
 });
+
+export type RolesTypes = (typeof roleTypeEnum.enumValues)[number] 

@@ -1,21 +1,16 @@
+import { Router } from 'express';
 
-import { Router } from "express";
-
-import { streamUpload } from "../middlewares/busboyStreamUpload.middleware.js";
-import { createRetailerSchema } from "../middlewares/validators/retailer.validator.js";
-
-import * as retailerController from "../controllers/retailer/index.js";
-import { validateData } from "../middlewares/validateDate.middleware.js";
+import { streamUpload } from '../middlewares/busboyStreamUpload.middleware.js';
+import * as retailerController from '../controllers/retailer/index.js';
+import { apiBodyValidator } from '../middlewares/validators/index.js';
+import { createRetailerSchema } from '../api-schemas/retailer.schemas.js';
 
 const retailerRouter = Router();
 
 retailerRouter.post(
-  "/register",
-  streamUpload(
-    "shopPhoto",
-    "doodhsetu/retailers",
-  ),
-  validateData(createRetailerSchema),
+  '/register',
+  streamUpload('shopPhoto', 'doodhsetu/retailers'),
+  apiBodyValidator(createRetailerSchema),
   retailerController.registerRetailer,
 );
 

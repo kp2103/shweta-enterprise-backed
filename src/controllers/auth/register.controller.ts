@@ -6,112 +6,122 @@ import { generateHash } from '../../utils/bcrypt.utils.js';
 import { logError } from '../../utils/logs.util.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.utils.js';
 import { sessionTable } from '../../db/schemas/session.schema.js';
-import { EMAIL_REGEX, PASSWORD_REGEX } from '../../constants/regex.const.js';
+import { rolesTable, type RolesTypes } from '../../db/schemas/roles.schema.js';
+import { eq } from 'drizzle-orm';
+import { sendValidatedResponse } from '../../utils/response.util.js';
+import { registerResponseSchema } from '../../api-schemas/auth.schemas.js';
 
 interface RegisterUserBody {
   fullName: string;
   email: string;
   password: string;
   avatarURL: string | undefined;
-  roleId: string;
+  role: RolesTypes;
 }
 
 export async function register(
-  req: Request<null, null, RegisterUserBody>,
+  req: Request<any, any, RegisterUserBody>,
   res: Response<ApiResponse>,
 ) {
   try {
-    const { avatarURL, email, fullName, password, roleId } = req.body;
+    const { avatarURL, email, fullName, password, role } = req.body;
 
-    if (!fullName || !email || !password || !roleId) {
+    // 1. Fetch role ID from role name
+    const [roleRecord] = await DB.getInstance()
+      .select({
+        roleId: rolesTable.roleId,
+      })
+      .from(rolesTable)
+      .where(eq(rolesTable.role, role))
+      .limit(1);
+
+    if (!roleRecord) {
       return res.status(400).json({
         success: false,
-        message: 'Required fields are missing',
+        message: `Invalid role specified: ${role}`,
       });
     }
 
-    // handle the validation error
-    if (!PASSWORD_REGEX.test(password)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation Failed',
-        error: [
-          'password must be atleast 8 character and that must incldue the one uppercase, lowercase and special character',
-        ],
-      });
-    }
-    if (!EMAIL_REGEX.test(email)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        error: ['email is not valid'],
-      });
-    }
-
-    // hash the password
+    // Hash the password
     const hashedPassword = await generateHash(password);
 
-    const user = (
-      await DB.getInstance()
-        .insert(userTable)
-        .values({
-          email,
-          fullName,
-          avatarURL: avatarURL ?? null,
-          passwordHash: hashedPassword,
-          roleId: roleId,
-        })
-        .returning({
-          id: userTable.id,
-          email: userTable.email,
-          fullName: userTable.fullName,
-          createdAt: userTable.createdAt,
-        })
-    )[0];
+    // 2. Perform atomic user creation and session creation in a transaction
+    const { user, accessToken, refreshToken } = await DB.getInstance().transaction(
+      async (tx) => {
+        // A. Insert User
+        const [newUser] = await tx
+          .insert(userTable)
+          .values({
+            email,
+            fullName,
+            avatarURL: avatarURL ?? null,
+            passwordHash: hashedPassword,
+            roleId: roleRecord.roleId,
+          })
+          .returning({
+            id: userTable.id,
+            email: userTable.email,
+            fullName: userTable.fullName,
+            createdAt: userTable.createdAt,
+          });
 
-    if (!user) {
-      throw new Error('Failed to create user');
-    }
+        if (!newUser) {
+          throw new Error('Failed to create user');
+        }
 
-    // refresh and access token
-    const refreshToken = generateRefreshToken({
-      userId: user.id,
-    });
+        // B. Generate tokens & Insert Session
+        const newRefreshToken = generateRefreshToken({
+          userId: newUser.id,
+        });
 
-    const session = (
-      await DB.getInstance()
-        .insert(sessionTable)
-        .values({
-          userId: user.id,
-          refreshTokenHash: await generateHash(refreshToken),
-        })
-        .returning({
-          id: sessionTable.id,
-        })
-    )[0];
+        const refreshTokenHash = await generateHash(newRefreshToken);
 
-    if (!session) throw new Error('Failed to create an Session');
+        const [newSession] = await tx
+          .insert(sessionTable)
+          .values({
+            userId: newUser.id,
+            refreshTokenHash,
+          })
+          .returning({
+            id: sessionTable.id,
+          });
 
-    const accessToken = generateAccessToken({
-      userId: user.id,
-      sessionId: session.id,
-    });
+        if (!newSession) {
+          throw new Error('Failed to create session');
+        }
 
-    return res.status(201).json({
+        const newAccessToken = generateAccessToken({
+          userId: newUser.id,
+          sessionId: newSession.id,
+        });
+
+        return {
+          user: newUser,
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        };
+      },
+    );
+
+    // Validate response schema before sending
+    return sendValidatedResponse(res, 201, registerResponseSchema, {
       success: true,
       message: 'New User created',
       data: { ...user, accessToken, refreshToken },
     });
-  } catch (error) {
-    logError('register controller', error);
+  } catch (error: any) {
+    const pgCode = error?.code || error?.cause?.code;
 
-    const pgError = error as PgError;
-    if (pgError.code === '23505') {
+    // Handle duplicate key error (PostgreSQL unique_violation: 23505) without logging
+    if (pgCode === '23505') {
       return res.status(409).json({
         success: false,
-        message: 'A user with this email already exists.',
+        message: 'A user with this email already exists',
       });
     }
+
+    // Only log unexpected internal server errors
+    logError('register controller', error);
 
     return res.status(500).json({
       success: false,

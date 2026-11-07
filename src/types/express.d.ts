@@ -1,6 +1,11 @@
 // types/express.d.ts
 import type { PermissionCode } from '../constants/permissions.const.js';
 
+export interface ControllerResponseData {
+  statusCode?: number;
+  payload: any;
+}
+
 declare global {
   namespace Express {
     interface Request {
@@ -10,19 +15,23 @@ declare global {
         accessTokenExpireAt: number;
         accessTokenId: string;
         roleId?: string;
-        permissions: PermissionCode[]
+        permissions: PermissionCode[];
       };
 
       userPermissions?: PermissionCode[];
 
       cloudinaryData?:
-      | {
-        url: string;
-        publicId: string;
-      }
-      | undefined;
+        | {
+            url: string;
+            publicId: string;
+          }
+        | undefined;
+    }
+
+    interface Locals {
+      response?: ControllerResponseData;
     }
   }
 }
 
-export { };
+export {};
