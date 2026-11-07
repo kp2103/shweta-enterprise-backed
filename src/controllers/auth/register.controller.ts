@@ -6,7 +6,6 @@ import { generateHash } from '../../utils/bcrypt.utils.js';
 import { logError } from '../../utils/logs.util.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.utils.js';
 import { sessionTable } from '../../db/schemas/session.schema.js';
-import type { USER_ROLES } from '../../db/schemas/roles.schema.js';
 import { EMAIL_REGEX, PASSWORD_REGEX } from '../../constants/regex.const.js';
 
 interface RegisterUserBody {
@@ -14,7 +13,7 @@ interface RegisterUserBody {
   email: string;
   password: string;
   avatarURL: string | undefined;
-  roleId: (typeof USER_ROLES)[number];
+  roleId: string;
 }
 
 export async function register(

@@ -6,6 +6,7 @@ import { fetchUserById } from '../services/user/fetchUserById.js';
 import { removeSession } from '../services/sessions/removeSession.js';
 import { redisClient } from '../config/redis.js';
 import { REDIS_BLACKLIST_TOKEN_KEY } from '../constants/redis.const.js';
+import { getUserPermissions } from '../services/permissions/getUserPermissions.service.js';
 
 export async function authMiddleware(
   req: Request,
@@ -26,7 +27,7 @@ export async function authMiddleware(
 
   try {
     const decoded = verifyAccessToken(accessToken);
-    console.log(decoded)
+    console.log(decoded);
     if (!decoded || !decoded.iat || !decoded.exp || !decoded.jti) {
       return res.status(401).json({
         success: false,
@@ -34,16 +35,17 @@ export async function authMiddleware(
       });
     }
 
-    //check token is balcklisted or not
-    const isBlackListed = await redisClient.exists(`${REDIS_BLACKLIST_TOKEN_KEY}:${decoded.jti}`)
+    // Check token is blacklisted or not
+    const isBlackListed = await redisClient.exists(
+      `${REDIS_BLACKLIST_TOKEN_KEY}:${decoded.jti}`
+    );
 
-    if(isBlackListed)
-    {
+    if (isBlackListed) {
       return res.status(403).json({
-        success : false,
-        message : "Unauthorized token is blacklisted",
-        data : null
-      })
+        success: false,
+        message: 'Unauthorized token is blacklisted',
+        data: null,
+      });
     }
 
     const user = await fetchUserById(decoded.userId);
@@ -64,7 +66,7 @@ export async function authMiddleware(
       if (passwordChangedAtSeconds > decoded.iat) {
         // Delete the invalidated session from the database
         if (decoded.sessionId) {
-          await removeSession(decoded.sessionId)
+          await removeSession(decoded.sessionId);
         }
 
         return res.status(401).json({
@@ -74,11 +76,16 @@ export async function authMiddleware(
       }
     }
 
+    // get the user permisison based on the roles 
+    const permissions = await getUserPermissions(user.id)
+
     req.user = {
       id: decoded.userId,
       sessionId: decoded.sessionId,
-      accessTokenExpireAt : decoded.exp,
-      accessTokenId : decoded.jti
+      accessTokenExpireAt: decoded.exp,
+      accessTokenId: decoded.jti,
+      roleId: user.roleId,
+      permissions
     };
 
     next();

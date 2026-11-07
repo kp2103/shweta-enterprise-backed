@@ -1,0 +1,1 @@
+export {registerRetailer} from './createRetailer.controller.js'

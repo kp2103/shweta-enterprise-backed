@@ -17,20 +17,25 @@
     "format:check": "prettier . --check",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:update": "drizzle-kit generate && drizzle-kit migrate"
+    "db:update": "drizzle-kit generate && drizzle-kit migrate",
+    "db:seed": "tsx src/db/seed/permissions.seed.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "busboy": "^1.6.0",
+    "cloudinary": "^2.11.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^1.0.0-rc.4",
     "express": "^5.1.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.31.0",
     "@types/bcrypt": "^6.0.0",
+    "@types/busboy": "^1.5.5",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.19.2",
