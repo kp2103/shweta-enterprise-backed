@@ -397,10 +397,7 @@ export const PERMISSIONS = [
 export type PermissionCode = (typeof PERMISSIONS)[number]['code'];
 
 // All permission codes
-export const PERMISSION_CATALOGUE: PermissionCode[] = PERMISSIONS.map(
-  (p) => p.code
-);
-
+export const PERMISSION_CATALOGUE = Object.fromEntries(PERMISSIONS.map((p) => [p.code, p.code])) as { [K in PermissionCode]: K }
 // Filtered directly from PERMISSIONS objects without hardcoding strings
 export const RETAILER_PERMISSION_CODES: PermissionCode[] = PERMISSIONS.filter(
   (p) => (p.roles as readonly string[]).includes(ROLES.RETAILER)

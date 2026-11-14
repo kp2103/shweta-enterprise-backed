@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { ZodType } from 'zod';
+import type { ZodType, } from 'zod';
 
 export const apiQuerySearchValidator = <T extends ZodType>(schema: T) => {
   return (req: Request, res: Response, next: NextFunction) => {

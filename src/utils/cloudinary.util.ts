@@ -21,17 +21,17 @@ export const generateShopFolderName = (shopName: string): string => {
 export const uploadStreamToCloudinary = (
   fileStream: NodeJS.ReadableStream,
   folderName: string,
-//   shopName : string,
+  //   shopName : string,
 ): Promise<UploadApiResponse> => {
   return new Promise((resolve, reject) => {
     // const fileName = generateShopFolderName(shopName)
     const cloudUploadStream = cloudinary.uploader.upload_stream(
-      { 
+      {
         folder: folderName,
         // public_id : fileName,
         resource_type: 'image', // STRICTLY enforces image processing
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp'], // Optional but recommended for security,
-        overwrite : false,
+        overwrite: false,
       },
       (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
         if (error) return reject(error);
