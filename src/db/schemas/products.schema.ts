@@ -1,4 +1,4 @@
-import { boolean, doublePrecision, numeric, pgEnum, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, doublePrecision, pgEnum, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const PRODUCT_UNIT = ['ml', "litre", "kg", "packet", "piece"] as const
 export const PRODUCT_CATEGORIES = [
