@@ -54,3 +54,29 @@ export const deleteFromCloudinary = async (publicId: string): Promise<void> => {
     console.error(`Failed to delete image ${publicId} from Cloudinary`, error);
   }
 };
+
+/**
+ * Extracts Cloudinary public_id from a secure URL
+ */
+export const getPublicIdFromUrl = (url: string): string | null => {
+  try {
+    const parts = url.split('/upload/');
+    const pathAfterUpload = parts[1];
+    if (!pathAfterUpload) return null;
+    const withoutVersion = pathAfterUpload.replace(/^v\d+\//, '');
+    const lastDotIndex = withoutVersion.lastIndexOf('.');
+    return lastDotIndex !== -1 ? withoutVersion.substring(0, lastDotIndex) : withoutVersion;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Deletes an image from Cloudinary given its URL
+ */
+export const deleteFromCloudinaryByUrl = async (url: string): Promise<void> => {
+  const publicId = getPublicIdFromUrl(url);
+  if (publicId) {
+    await deleteFromCloudinary(publicId);
+  }
+};

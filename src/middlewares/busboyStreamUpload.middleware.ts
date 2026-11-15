@@ -15,8 +15,20 @@ const allowedMimeTypes = new Set([
 export const streamUpload = (
   fileField: string,
   folderName: string,
+  isOptional = false,
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    const isMultipart = req.headers['content-type']?.includes('multipart/form-data');
+    if (!isMultipart) {
+      if (isOptional) {
+        return next();
+      }
+      return res.status(400).json({
+        success: false,
+        message: 'Content-Type must be multipart/form-data',
+      });
+    }
+
     let uploadPromise: Promise<void> | null = null;
     let uploadError: Error | null = null;
     let fileFound = false;
@@ -126,6 +138,11 @@ export const streamUpload = (
       }
 
       if (!fileFound || !req.cloudinaryData) {
+        if (isOptional) {
+          finished = true;
+          return next();
+        }
+
         finished = true;
 
         return res.status(400).json({

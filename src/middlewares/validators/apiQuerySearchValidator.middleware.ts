@@ -16,7 +16,12 @@ export const apiQuerySearchValidator = <T extends ZodType>(schema: T) => {
       });
     }
 
-    req.query = result.data as any;
+    Object.defineProperty(req, 'query', {
+      value: result.data,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
     next();
   };
 };
