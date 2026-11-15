@@ -14,7 +14,7 @@ export async function createProduct(
   res: Response<ApiResponse>,
 ) {
   try {
-    const { name, description, unit, price, quantity, imageUrl, category } = req.body;
+    const { name, description, unit, price, quantity, category } = req.body;
 
     const result = await createProductService({
       name,
@@ -23,7 +23,7 @@ export async function createProduct(
       price,
       quantity,
       category,
-      imageUrl: req.cloudinaryData?.url ?? imageUrl ?? null,
+      imageUrl: req.cloudinaryData?.url ?? null,
     });
 
     if (!result.ok) {
