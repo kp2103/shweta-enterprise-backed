@@ -4,6 +4,7 @@ import { PRODUCT_CATEGORIES, productsTable } from '../../db/schemas/index.js';
 import type { ServiceResult } from '../../types/service.types.js';
 import { logError } from '../../utils/logs.util.js';
 import type { ProductRecord } from '../../db/schemas/products.schema.js';
+import { escapeLikePattern } from '../../utils/queryConditions.utils.js';
 
 export type GetAllProductsErrorCode = 'INTERNAL_ERROR';
 
@@ -15,9 +16,7 @@ export interface GetProductsQuerySearch {
     isActive?: boolean | undefined;
 }
 
-function escapeLikePattern(value: string): string {
-    return value.replace(/[\\%_]/g, '\\$&');
-}
+
 
 /**
  * Fetches paginated and filtered products ordered from newest to oldest.
